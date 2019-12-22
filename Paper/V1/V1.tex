@@ -1,0 +1,272 @@
+
+
+
+
+\documentclass[journal,transmag]{IEEEtran}
+
+\ifCLASSINFOpdf
+
+\else
+
+\fi
+
+
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\iffalse
+
+\bibliography{paper.bib}
+
+\fi
+
+\begin{document}
+\bibliographystyle{unsrt}
+\title{A Survey of Simultaneous Localization and Mapping}
+
+
+
+% author names and affiliations
+% transmag papers use the long conference author name format.
+
+\author{\IEEEauthorblockN{Baichuan Huang\IEEEauthorrefmark{1,2},
+Jun Zhao\IEEEauthorrefmark{1}
+Jingbin Liu\IEEEauthorrefmark{2}}
+\IEEEauthorblockA{\IEEEauthorrefmark{1}Nanyang Technological University, Singapore}
+\IEEEauthorblockA{\IEEEauthorrefmark{2}Wuhan University, Wuhan, China}
+}
+
+% The paper headers
+%\markboth{Journal of \LaTeX\ Class Files,~Vol.~14, No.~8, August~2015}%
+%{Shell \MakeLowercase{\textit{et al.}}: Bare Demo of IEEEtran.cls for IEEE Transactions on Magnetics Journals}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+Simultaneous Localization and Mapping (SLAM) achieves the purpose of simultaneous positioning and map construction based on self-perception. The paper makes an overview in SLAM including Lidar SLAM, visual SLAM, and their fusion. For Lidar or visual SLAM, the survey illustrates the basic type and product of sensors, open source system in sort and history, deep learning embedded, the challenge and future. Additionally, visual inertial odometry is supplemented. For Lidar and visual fused SLAM, the paper highlights the multi-sensors calibration, the fusion in hardware, data, task layer. The open question and forward thinking end the paper. The contributions of this paper can be summarized as follows: the paper provides a high quality and full-scale overview in SLAM. It's very friendly for new researchers to hold the development of SLAM and learn it very obviously. Also, the paper can be considered as dictionary for experienced researchers to search and find new interested orientation.   
+\end{abstract}
+
+% Note that keywords are not normally used for peerreview papers.
+\begin{IEEEkeywords}
+Survey, SLAM (Simultaneous Localization and Mapping), Lidar SLAM, Visual SLAM, Lidar and Vision Fused, User guidance.
+\end{IEEEkeywords}}
+
+\maketitle
+
+\IEEEdisplaynontitleabstractindextext
+
+\IEEEpeerreviewmaketitle
+
+\section{Introduction}
+
+\IEEEPARstart{S}{lam} is the abbreviation of Simultaneous Localization and Mapping, which contains two main tasks, localization and mapping. It is a significant open problem in mobile robotics: to move precisely, a mobile robot must have an accurate environment map; however, to build an accurate map, the mobile robot’s sensing locations must be known precisely \cite{leonard1991simultaneous}. In this way, simultaneous map building and localization can be seen to present a question of “which came first, the chicken or the egg?” (The map or the motion?) 
+
+In 1990, \cite{smith1990estimating} firstly proposed the use of the EKF (Extended Kalman Filter) for incrementally estimating the posterior distribution over robot pose along with the positions of the landmarks. In fact, starting from the unknown location of the unknown environment, the robot locates its own position and attitude through repeated observation of environmental features in the movement process, and then builds an incremental map of the surrounding environment according to its own position, so as to achieve the purpose of simultaneous positioning and map construction. Localization is a very complex and hot point in recent years. The technologies of localization depend on environment and demand for cost, accuracy, frequency and robustness, which can be achieved by GPS (Global Positioning System), IMU (Inertial Measurement Unit), and wireless signal, etc.\cite{huang2019robust}\cite{liu2012iparking}. But GPS can only work well outdoors and IMU system has cumulative error \cite{liu2012hybrid}. The technology of wireless, as an active system, can't make a balance between cost and accuracy. With the fast development, SLAM equipped with Lidar, camera, IMU and other sensors springs up in last years.
+
+Begin with filter-based SLAM, Graph-based SLAM play a dominant role now. The algorithm derives from KF (Kalman Filter), EKF and PF (Particle Filter) to graph-based optimization. And single thread has been replaced by multi-thread. The technology of SLAM also changed from the earliest prototype of military use to later robot applications with the fusion of multi sensors.
+
+The organization of this paper can be summarized as follows: in Section II, Lidar SLAM including Lidar sensors, open source Lidar SLAM system, deep learning in Lidar and challenge as well as future will be illustrated. Section III highlights the visual SLAM including camera sensors, different density of open source visual SLAM system, visual inertial odometry SLAM, deep learning in visual SLAM and future. In Section IV, the fusion of Lidar and vision will be demonstrated. Finally, the paper identifies several directions for future research of SLAM and provides high quality and full-scale user guide for new researchers in SLAM.
+\section{Lidar SLAM}
+In 1991, \cite{leonard1991simultaneous} used multiple servo-mounted sonar sensors and EKF filter to equip robots with SLAM system. Begin with sonar sensors, the birth of Lidar makes SLAM system more reliable and robustness.
+\subsection{Lidar Sensors}
+Lidar sensors can be divided into 2D Lidar and 3D Lidar, which are defined by the number of Lidar beams. In terms of production process, Lidar can also be divided into mechanical Lidar, hybrid solid-state Lidar like MEMS (micro-electro-mechanical) and solid-state Lidar. Solid-state Lidar can be produced by the technology of phased array and flash.
+\begin{itemize}
+    \item \textbf{Velodyne}: In mechanical Lidar, it has VLP-16, HDL-32E and HDL-64E. In hybrid solid-state Lidar, it has Ultra puck auto with 32E.  
+    \item \textbf{SLAMTEC}: it has low cost Lidar and robot platform such RPLIDAR A1, A2 and R3. 
+    \item \textbf{Ouster}: it has mechanical Lidar from 16 to 128 channels.
+    \item \textbf{Quanergy}: S3 is the first issued solid-state Lidar in the world and M8 is the mechanical Lidar. The S3-QI is the micro solid-state Lidar.
+    \item \textbf{Ibeo}: It has Lux 4L and Lux 8L in mechanical Lidar. Cooperated with Valeo, it issued a hybrid solid-state Lidar named Scala.
+\end{itemize}
+
+In the trend, miniaturization and lightweight solid state Lidar will occupied the market and be satisfied with most application. Other Lidar companies include but not limited to \textbf{sick}, \textbf{Hokuyo}, \textbf{HESAI}, \textbf{RoboSense}, \textbf{LeddarTech}, \textbf{ISureStar}, \textbf{benewake}, \textbf{Livox}, \textbf{Innovusion}, \textbf{Innoviz}, \textbf{Trimble}, \textbf{Leishen Intelligent System}.
+\subsection{Lidar SLAM System}
+Lidar SLAM system is reliable in theory and technology. \cite{thrun2005probabilistic} illustrated the theory in math about how to simultaneous localization and mapping with 2D Lidar based on probabilistic. Furthre, \cite{santos2013evaluation} make surveys about 2D Lidar SLAM system. 
+\subsubsection{2D SLAM}
+\begin{itemize}
+    \item \textbf{Gmapping}: it is the most used SLAM package in robots based on RBPF (Rao-Blackwellisation Partical Filter) method. It adds scan-match method to estimate the position\cite{grisetti2007improved}\cite{thrun2005probabilistic}. It is the improved version with Grid map based on \textbf{FastSLAM}\cite{montemerlo2002fastslam}\cite{montemerlo2003fastslam}.
+    \item \textbf{HectorSlam}: it combines a 2D SLAM system  and 3D navigation with scan-match technology and an inertial sensing system\cite{kohlbrecher2011flexible}.
+    \item \textbf{KartoSLAM}: it is a graph-based SLAM system\cite{konolige2010efficient}. 
+    \item \textbf{LagoSLAM}: its basic is the graph-based SLAM, which is the minimization of a nonlinear non-convex cost function\cite{carlone2012linear}. 
+    \item \textbf{CoreSLAm}: it is an algorithm to be understood with minimum loss of performance\cite{steux2010slam}. 
+    \item \textbf{Cartographer}: it is a SLAM system from Google\cite{hess2016real}. It adopted sub-map and loop closure to achieve a better performance in product grade. The algorithm can provide SLAM in 2D and 3D across multiple platforms and sensor configurations.
+\end{itemize}
+\subsubsection{3D SLAM}
+\begin{itemize}
+    \item \textbf{Loam}: it is a real-time method for state estimation and mapping using a 3D Lidar\cite{zhang2014loam}. It also has back and forth spin version and continuous scanning 2D Lidar version.
+    \item \textbf{Lego-Loam}: it takes in point cloud from a Velodyne VLP-16 Lidar (placed horizontal) and optional IMU data as inputs. The system outputs 6D pose estimation in real-time and has global optimization and loop closure\cite{shan2018lego}.
+    \item \textbf{Cartographer}: it supports 2D and 3D SLAM\cite{hess2016real}.
+    \item \textbf{IMLS-SLAM}: it presents a new low-drift SLAM algorithm based only on 3D LiDAR data based on a scan-to-model matching framework \cite{deschaud2018imls}.
+\end{itemize}
+
+\subsubsection{Deep Learning With Lidar SLAM}
+\begin{itemize}
+    \item \textbf{Feature \& Detection}: \textbf{PointNetVLAD} \cite{angelina2018pointnetvlad} allows end-to-end training and inference to extract the global descriptor from a given 3D point cloud to solve point cloud based retrieval for place recognition. \textbf{VoxelNet} \cite{zhou2018voxelnet} is a generic 3D detection network that unifies feature extraction and bounding box prediction into a single stage, end-to-end trainable deep network. Other work can be seen in \textbf{BirdNet} \cite{beltran2018birdnet}. \textbf{LMNet} \cite{minemura2018lmnet}  describes an efficient single-stage deep convolutional neural network to detect objects and outputs an objectness map and the bounding box offset values for each point. \textbf{PIXOR} \cite{yang2018pixor} is a proposal-free, single-stage detector that outputs oriented 3D object estimates decoded from pixel-wise neural network predictions. \textbf{Yolo3D} \cite{ali2018yolo3d} builds on the success of the one-shot regression meta-architecture in the 2D perspective image space and extend it to generate oriented 3D object bounding boxes from LiDAR point cloud. \textbf{PointCNN} \cite{li2018pointcnn} proposes to learn a X-transformation from the input points. The X-transformation is applied by element-wise product and sum operations of typical convolution operator. \textbf{MV3D} \cite{chen2017multi} is a sensory-fusion framework that takes both Lidar point cloud and RGB images as input and predicts oriented 3D bounding boxes. Other similar work can be seen in this best paper in CVPR2018 but not limited to \cite{su2018splatnet}. 
+    \item \textbf{Recognition \& Segmentation}: In fact, the method of segmentation to 3D point cloud can be divided into Edge-based, region growing, model fitting, hybrid method, machine learning application and deep learning \cite{grilli2017review}. Here the paper focuses on the methods of deep learning. \textbf{PointNet} \cite{qi2016pointnet} designs a novel type of neural network that directly consumes point clouds, which has the function of classification, segmentation and semantic analysis. \textbf{PointNet++} \cite{qi2017pointnetplusplus} learns hierarchical features with increasing scales of contexts. \textbf{SegMap} \cite{segmap2018} is a map representation solution to the localization and mapping problem based on the extraction of segments in 3D point clouds. \textbf{SqueezeSeg} \cite{wu2017squeezeseg}\cite{wu2018squeezesegv2}\cite{yue2018lidar} are convolutional neural nets with recurrent CRF (Conditional random fields) for real-time road-object segmentation from 3d Lidar point cloud. \textbf{PointSIFT} \cite{jiang2018pointsift} is a semantic segmentation framework for 3D point clouds. It is based on a simple module which extracts features from neighbor points in eight directions. \textbf{PointWise} \cite{hua-pointwise-cvpr18} presents a convolutional neural network for semantic segmentation and object recognition with 3D point clouds. \textbf{3P-RNN} \cite{ye20183d} is a novel end-to-end approach for unstructured point cloud semantic segmentation along two horizontal directions to exploit the inherent contextual features. Other similar work can be seen but not limited to \textbf{SPG} \cite{landrieu2018large} and the review \cite{grilli2017review}. \textbf{SegMatch} \cite{dube2017segmatch} is a loop closure method based on the detection and matching of 3D segments. \textbf{Kd-Network}  \cite{klokov2017escape} is designed for 3D model recognition tasks and works with unstructured point clouds. Other similar work can be seen but not limited to \textbf{PointRCNN} \cite{shi2019pointrcnn}.
+    \item \textbf{Localization}:  \textbf{L3-Net} \cite{L3-Net} is a novel learning-based LiDAR localization system that achieves centimeter-level localization accuracy. \textbf{SuMa++} \cite{Chen2019suma} computes semantic segmentation results in point-wise labels for the whole scan, allowing us to build a semantically-enriched map with labeled surfels and  improve the projective scan matching via semantic constraints.
+\end{itemize}
+
+\subsection{Challenge and Future}
+\subsubsection{Cost and Adaptability}
+The advantage of Lidar is that it can provide 3D information, and it is not affected by night and light change. In addition, the angle of view is relatively large and can reach 360 degrees.
+But the technological threshold of Lidar is very high, which lead to long development cycle and unaffordable cost on a large scale. In the future, miniaturization, reasonable cost, solid state, and achieving high reliability and adaptability is the trend.
+\subsubsection{Low-Texture and Dynamic Environment}
+Most SLAM system can just work in a fixed environment but things change constantly. Besides, low-Texture environment like long corridor and big pipeline will make trouble for Lidar SLAM. 
+\cite{wang2018imu} uses IMU to assist 2D SLAM to solve above obstacles. Further, \cite{walcott2012dynamic} incorporates the time dimension into the mapping process to enable a robot to maintain an accurate map while operating in dynamical environments. How to make Lidar SLAM more robust to low-texture and dynamic environment, and how to keep map updated should be taken into consideration more deeply.
+\subsubsection{Adversarial Sensor Attack}
+Deep Neural Network is easily attacked by adversarial samples, which is also proved in  camera-based perception. But in Lidar-based perception, it is highly important but unexplored. By relaying attack, \cite{shin2017illusion} firstly spoofs the Lidar with interference in output data and distance estimation. The novel saturation attack completely incapacitate a Lidar from sensing a certain direction based on Velodyne’s VLP-16. \cite{cao2019adversarial} explores the possibility of strategically controlling the spoofed attack to fool the machine learning model. The paper regards task as an optimization problem and design modeling methods for the input perturbation function and the objective function., which improves the attack success rates to around 75\%. The adversarial sensor attack will spoof the SLAM system based on Lidar point cloud, which is invisible as hardly found and defended. In the case, research on how to prevent the Lidar SLAM system from adversarial sensor attack should be a new topic.
+
+
+\section{Visual SLAM}
+As the development of CPU and GPU, the capability of graphics processing  becomes more and more powerful. Camera sensors getting cheaper, more lightweight and more versatile at the same time. The past decade has seen the rapid development of visual SLAM. Visual SLAM using camera also make the system cheaper and smaller compare with Lidar system. Now, visual SLAM system can run in micro PC and embedded device, even in mobile devices like smart phones \cite{mur2015orb}\cite{qin2018vins}\cite{klein2009parallel}\cite{InfiniTAM_ISMAR_2015}\cite{lynen2015get}. 
+
+Visual SLAM includes collection of sensors' data such as camera or inertial measurement unit , Visual Odometry or Visual Inertial Odometry in front end, Optimization in back end, Loop closure in back end and Mapping \cite{Gao2017SLAM}.  Relocalization is the additional modules for stable and accurate visual SLAM \cite{taketomi2017visual}.
+\subsection{Visual Sensors}
+The most used sensors that visual SLAM based are cameras. In detail, camera can be divided into monocular camera, stereo camera, RGB-D camera, event camera, etc.
+
+\textbf{Monocular camera}: visual slam based on monocular camera have a scale with real size of track and map. That's say that the real depth can't be got by monocular camera, which called Scale Ambiguity \cite{Zhangguofeng2016}. The SLAM based on Monocular camera has to initialization, and face the problem of drift.
+
+\textbf{Stereo camera}: stereo camera is a combination of two monocular camera but the distance called baseline between the two monocular camera is known. Although the depth can be got based on calibration, correction, matching and calculation, the process will be a waste of lost of resources. 
+
+\textbf{RGB-D camera}: RGB-D camera also called depth camera because the camera can output depth in pixel directly. The depth camera can be realized by technology of stereo, structure-light and TOF. The theory of Structure-light is that infrared laser emits some pattern with structure feature to the surface of object. Then the IR camera will collect the change of patter due to the different depth in the surface. TOF will measure the time of laser's flight to calculate the distance.
+
+\textbf{Event camera}: \cite{Gallego2019Event} illustrates that instead of capturing images at a fixed rate, event camera measures per-pixel brightness changes asynchronously. Event camera has very high dynamic range (140 dB vs. 60 dB), high temporal resolution (in the order of us), low power consumption, and do not suffer from motion blur. Hence, event cameras can performance better than traditional camera in high speed and high dynamic range. The example of the event camera are Dynamic Vision Sensor \cite{lichtsteiner2008128}\cite{son20174}\cite{posch2009microbolometer}\cite{hofstatter2010sparc}, Dynamic Line Sensor \cite{posch2007dual}, Dynamic and Active-Pixel Vision Sensor \cite{brandli2014240}, and Asynchronous Time-based Image Sensor \cite{posch2010qvga}.
+
+Next the product and company of visual sensors will be introduced:
+
+\begin{itemize}
+    \item \textbf{Microsoft}: Kinectc v1(structured-light), Kinect v2(TOF), Azure Kinect(with microphone and IMU).
+    \item \textbf{Intel}: 200 Series, 300 Series, Module D400 Series, D415(Active IR Stereo, Rolling shutter), D435(Active IR Stereo, Global Shutter), D435i(D435 with IMU).
+    \item \textbf{Stereolabs ZED}: ZED Stereo camera(depth up to 20m).
+    \item \textbf{MYNTAI}: D1000 Series(depth camera), D1200(for smart phone), S1030 Series(standard stereo camera).
+    \item \textbf{Occipital Structure}: Structure Sensor(Suitable for ipad).
+    \item \textbf{Samsung}: Gen2 and Gen3 dynamic vision sensors and event-based vision solution\cite{son20174}.
+\end{itemize}
+
+Other depth camera can be listed as follows but not limited to \textbf{Leap Motion}, \textbf{Orbbec Astra}, \textbf{Pico Zense}, \textbf{DUO}, \textbf{Xtion}, \textbf{Camboard}, \textbf{IMI}, \textbf{Humanplus}, \textbf{PERCIPIO.XYZ}, \textbf{PrimeSense}. Other event camera can be listed as follows but not limited to \textbf{iniVation}, \textbf{AIT(AIT Austrian Institute of Technology)}, \textbf{SiliconEye}, \textbf{Prophesee}, \textbf{CelePixel}, \textbf{Dilusense}.
+
+\subsection{Visual SLAM System}
+The method of utilizing information from image can be classified into direct method and feature based method. Direct method leads to semiDense and dense construction while feature based method cause sparse construction. Next, some visual slam will be introduced ( ATAM7 is a visual SLAM toolkit for beginners\cite{taketomi2017visual}): 
+
+\subsubsection{Sparse Visual SLAM}
+\begin{itemize}
+    \item \textbf{MonoSLAM}: it (monocular) is the first real-time mono SLAM system, which is based on EKF\cite{davison2007monoslam}. 
+    \item \textbf{PTAM}: it (monocular) is the first SLAM system that parallel tracking and mapping. It firstly adopts Bundle Adjustment to optimize and concept of key frame \cite{klein2007parallel}\cite{klein2009parallel}. The later version supports a trivially simple yet effective relocalization method \cite{klein2008improving}.
+    \item \textbf{ORB-SLAM}: it (monocular) uses three threads: Tracking, local optimization based on Bundle Adjustment (Covisibility Graph) and global optimization based on pose graph (Essential Graph) \cite{rublee2011orb}\cite{mur2015orb}. \textbf{ORB-SLAM v2} \cite{mur2017orb} supports monocular, stereo, and RGB-D cameras. \textbf{Visual Inertial ORB-SLAM} \cite{mur2017visual}\cite{forster2016manifold} explains the initialization process of IMU and the joint optimization with visual information.
+    \item \textbf{proSLAM}: it (stereo) is a lightweight visual SLAM system with easily understanding \cite{2018-schlegel-proslam}.
+    \item \textbf{ENFT-sfm}: it (monocular) is a feature tracking method which can efficiently match feature point correspondences among one or multiple video sequences \cite{zhang2016efficient}. The updated version \textbf{ENFT-SLAM} can run in large scale.
+    \item \textbf{OpenVSLAm}: it (all types of cameras) \cite{openvslam2019} is based on an indirect SLAM algorithm with sparse features. The excellent point of OpenVSLAM is that the system supports perspective, fisheye, and equirectangular, even the camera models you design.
+\end{itemize}
+
+Other similar work can be listed as follows but not limited to \textbf{UcoSLAM} \cite{munoz2019ucoslam}.
+
+\subsubsection{SemiDense Visual SLAM}
+
+\begin{itemize}
+    \item \textbf{LSD-SLAM}:  it (monocular) proposes a novel direct tracking method which operates on Lie Algebra and direct method \cite{engel2014lsd}. \cite{engel2015large} make it supporting stereo cameras and \cite{caruso2015large} make it supporting omnidirectional cameras.
+    \item \textbf{SVO}: it (monocular) is Semi-direct Visual Odoemtry \cite{forster2016svo}. It uses sparse model-based image alignment to get a fast speed. The update version is extended to multiple cameras, fisheye and catadioptric ones \cite{forster2016manifold}. \cite{forster2016manifold} gives detailed math proof about VIO. \textbf{CNN-SVO} \cite{loo2018cnn} is the version of  SVO with the depth prediction from a single-image depth prediction network.
+    \item \textbf{DSO}:  it (monocular) \cite{DBLP:journals/corr/EngelKC16}\cite{engel2017direct} is a new work from the author of LSD-SLAM \cite{engel2014lsd}. The work creates a visual odoemtry based on direct method and sparse method without detection and description of feature point.
+    \item \textbf{EVO}: it (Event camera) \cite{rebecq2016evo} is an event-based visual odometry algorithm. Our algorithm is unaffected by motion blur and operates very well in challenging, high dynamic range conditions with strong illumination changes. Other semiDense SLAM based on event camera can be seen in \cite{zhou2018semi}. Other VO (visual odometry) system based on event camera can be seen in \cite{weikersdorfer2013simultaneous}\cite{weikersdorfer2014event}.
+
+\end{itemize}
+
+\subsubsection{Dense Visual SLAM}
+
+\begin{itemize}
+    \item \textbf{DTAM}:  it (monocular) can reconstruct 3D model in real time based on minimizing a global spatially regularized energy functional in a novel non-convex optimization framework, which is called direct method \cite{civera2008inverse}\cite{newcombe2011dtam}.
+    \item \textbf{MLM SLAM}: it (monocular) can reconstruct dense 3D model online without graphics processing unit (GPU) \cite{greene2016multi}. The key contribution is a multi-resolution depth estimation and spatial smoothing process.
+    \item \textbf{Kinect Fusion}: it (RGB-D) is almost the first 3D reconstruction system with depth camera \cite{newcombe2011kinectfusion}\cite{izadi2011kinectfusion}.
+    \item \textbf{DVO}: it (RGB-D)  proposes a dense visual SLAM method, an entropy-based similarity measure for keyframe selection and loop closure detection based g2o framework \cite{steinbrucker2011real}\cite{kerl2013robust}\cite{kerl2013dense}.
+    \item \textbf{RGBD-SLAM-V2}: it (RGB-D) can reconstruct accurate 3D dense model without the help of other sensors. \cite{endres20133}.
+    \item \textbf{Kintinuous}: it (RGB-D) is a visual SLAM system with globally consistent point and mesh reconstructions in real-time \cite{whelan2012kintinuous}\cite{whelan2015real}\cite{Whelan2011Robust}.
+    \item \textbf{RTAB-MAP}: it (RGB-D) supports simultaneous localization and mapping but it's hard to be basis to develop upper algorithm \cite{labbe2014online}\cite{labbeappearance}\cite{labbe2011memory}. The latter version support both visual and Lidar SLAM \cite{labbe2019rtab}.
+    \item \textbf{Dynamic Fusion}: it (RGB-D) presents the first dense SLAM system capable of reconstructing non-rigidly deforming scenes in real-time based Kinect Fusion \cite{newcombe2015dynamicfusion}. \textbf{VolumeDeform} \cite{innmann2016volumedeform} also realizes real-time non-rigid reconstruction but not open source. The similar work can be seen in \textbf{Fusion4D} \cite{dou2016fusion4d}.
+    \item \textbf{Elastic Fusion}: it (RGB-D) is a real-time dense visual SLAM system capable of capturing comprehensive dense globally consistent surfel-based maps of room scale environments explored using an RGB-D camera \cite{whelan2015elasticfusion}\cite{whelan2016elasticfusion}.
+    \item \textbf{InfiniTAM}: it (RGB-D) is a real time 3D reconstruction system with CPU in Linux, IOS, Android platform \cite{InfiniTAM_ISMAR_2015}\cite{InfiniTAM_arXiv_2017}\cite{InfiniTAM_ECCV_2016}.
+    \item \textbf{Bundle Fusion}: it (RGB-D) supports robust tracking with recovery from gross tracking failures and re-estimates the 3D model in real-time to ensure global consistency \cite{dai2017bundlefusion}.
+\end{itemize}
+
+Other works can be listed as follows but not limited to \textbf{SLAMRecon}, \textbf{RKD-SLAM} \cite{liu2017robust} and \textbf{RGB-D SLAM} \cite{dai2018rgb}. \textbf{Maplab} \cite{schneider2018maplab}, \textbf{MID-Fusion}\cite{xu2018mid} and \textbf{MaskFusion} \cite{8613746} will introduced in next chapter. 
+\subsubsection{Visual Inertial Odometry SLAM}
+The determination of visual slam is technically challenging. Monocular visual SLAM has problems such as necessary initialization, scale ambiguity and scale drift \cite{strasdat2010scale}. Although stereo camera and RGB-D camera can solve the problems of initialization and scale, some obstacles can't be ignored such as fast movement (solved with Global Shuttle or fisheye even panoramic camera), small field of view, large calculation, occlusion, feature loss, dynamic scenes and changing light. Recently, VIO (visual inertial odometry SLAM) becomes the popular research.
+
+First of all, \cite{leutenegger2015keyframe}\cite{huang2014towards}\cite{li2013high} start some try in VIO. \cite{mur2017visual}\cite{forster2016manifold} give the samples and math proof in visual-inertial odeometry. Specially, tango \cite{froehlich2017investigation}, Dyson 360 Eye and hololens \cite{garon2016real} are the real products of VIO and receive good feedback. In addition to this
+, ARkit (filter-based) from Apple, ARcore (filter-based) from Google, Inside-out from uSens are the technology of VIO. Next some open source VIO system will be introduced \cite{delmerico2018benchmark}:
+\begin{itemize}
+    \item \textbf{SSF}: it (loosely-coupled, filter-based) is a time delay compensated single and multi sensor fusion framework based on an EKF \cite{weiss2012vision}.
+    \item \textbf{MSCKF}: it (tightly-coupled, filter-based) is adopted by Google Tango based on extended Kalman filter \cite{mourikis2007multi}. But the similar work called \textbf{MSCKF-VIO} \cite{sun2018robust} open the source.
+    \item \textbf{ROVIO}: it (tightly-coupled, filter-based) is an extended Kalman Filter with tracking of both 3D landmarks and image patch features \cite{bloesch2015robust}. It supports monocular camera.
+    \item \textbf{OKVIS}: it (tightly-coupled, optimization-based) is an open and classic Keyframe-based Visual-Inertial SLAM \cite{leutenegger2015keyframe}. It supports monocular and stereo camera based sliding window estimator.
+    \item \textbf{VINS}: \textbf{VINS-Mono} (tightly-coupled, optimization-based) \cite{li2017monocular}\cite{qin2018vins}\cite{qin2018online} is a real-time SLAM framework for Monocular Visual-Inertial Systems. The open source code runs on Linux, and is fully integrated with ROS.  \textbf{VINS-Mobile} \cite{qin2017robust}\cite{yang2016monocular} is a real-time monocular visual-inertial odometry running on compatible iOS devices. Furthermore, \textbf{VINS-Fusion} supports multiple visual-inertial sensor types (GPS, mono camera + IMU, stereo cameras + IMU, even stereo cameras only). It has online spatial calibration, online temporal calibration and visual loop closure.
+    \item \textbf{ICE-BA}: it (tightly-coupled, optimization-based) presents an incremental, consistent and efficient bundle adjustment for visual-inertial SLAM, which  performs in parallel both local BA over the sliding window and global BA over all keyframes, and outputs camera pose and updated map points for each frame in real-time \cite{liu2018ice}.
+    \item \textbf{Maplab}: it (tightly-coupled, optimization-based) is an open, research-oriented visual-inertial mapping framework, written in C++, for creating, processing and manipulating multi-session maps. On the one hand, maplab can be considered as a ready-to-use visual-inertial mapping and localization system. On the other hand, maplab provides the research community with a collection of multi-session mapping tools that include map merging, visual-inertial batch optimization, loop closure, 3D dense reconstruction \cite{schneider2018maplab}.
+\end{itemize}
+
+Other solutions can be listed as follows but not limited to \textbf{VI-ORB} (tightly-coupled, optimization-based) \cite{mur2017visual} (the works by the author of ORB-SLAM, but not open source). \textbf{RKSLAM} \cite{liu2016robust} can reliably handle fast motion and strong rotation for AR applications. Other VIO system based on event camera can be listed as follows but not limited to \cite{mueggler2018continuous}\cite{zhu2017event}\cite{nelson2019event}.
+
+\subsubsection{Deep Learning with Visual SLAM}
+Nowadays, deep learning plays a critical role in the maintenance of computer vision. As the development of visual SLAM, more and more focus are paid into deep learning with SLAM. The term "semantic SLAM" refers to an approach that includes the semantic information into the SLAM process to enhance the performance and representation by providing high-level understanding, robust performance, resource awareness, and task driven perception. Next, we will introduce the implement of SLAM with semantic information in these aspects: 
+
+\begin{itemize}
+    \item \textbf{Feature \& Detection}: \textbf{Pop-up SLAM} (Monocular) \cite{yang2016pop} proposes real-time monocular plane SLAM to demonstrate that scene understanding could improve both state estimation and dense mapping especially in low-texture environments. The plane measurements come from a pop-up 3D plane model applied to each single image. \cite{pavlakos20176} gets semantic key points predicted by a convolutional network (convnet). \textbf{SuperPoint} \cite{detone2018superpoint} presents a self-supervised framework for training interest point detectors and descriptors suitable for a large number of multiple-view geometry problems in computer vision. \cite{Li2018Stereo} proposes to use the easy-to-labeled 2D detection and discrete viewpoint classification together with a light-weight semantic inference method to obtain rough 3D object measurements. \textbf{GCN-SLAM} \cite{tang2019gcnv2} presents a deep learning-based network, GCNv2, for generation of key points and descriptors. \cite{grinvald2019volumetric} fuses information about 3D shape, location, and, if available, semantic class. \textbf{SalientDSO} \cite{liang2019salientdso} can realize visual saliency and environment perception with the aid of deep learning.  \cite{hosseinzadeh2018structure} integrates the detected objects as the quadrics models into the SLAM system. \textbf{CubeSLAM} (Monocular) is a 3D Object Detection and SLAM system \cite{yang2019cubeslam} based on cube model. It achieve object-level mapping, positioning, and dynamic object tracking. \cite{yang2019monocular} combines the cubeSLAM (high-level object) and Pop-up SLAM (plane landmarks) to make map more denser, more compact and semantic meaningful compared to feature point based SLAM.  \textbf{MonoGRNet} \cite{qin2019monogrnet}  is a geometric reasoning network for monocular 3D object detection and localization. Feature based on event camera can be seen but not limited to \cite{Lagorce2013Event}\cite{mueggler2017fast}. About the survey in deep learning for detection, \cite{wu2019recent} could be a good choice. 
+    \item \textbf{Recognition \& Segmentation}: \textbf{SLAM++} (CAD model) \cite{Salas2013SLAM} presents the major advantages of a new ‘object oriented’ 3D SLAM paradigm, which takes full advantage in the loop of prior knowledge that many scenes consist of repeated, domain-specific objects and structures. \cite{Li2016Semi} combines the state-of-art deep learning method and LSD-SLAM based on video stream from a monocular camera. 2D semantic information are transferred to 3D mapping via correspondence between connective keyframes with spatial consistency. \textbf{Semanticfusion} (RGBD) \cite{mccormac2017semanticfusion} combines CNN (Convolutional Neural Network) and a state-of-the-art dense Simultaneous Localization and Mapping (SLAM) system, ElasticFusion \cite{whelan2016elasticfusion} to build a semantic 3D map. \cite{sunderhauf2017meaningful} leverages sparse, feature-based RGB-D SLAM, image-based deep-learning object detection and 3D unsupervised segmentation. \textbf{MarrNet} \cite{wu2017marrnet} proposes an end-to-end trainable framework, sequentially estimating 2.5D sketches and 3D object shapes. \textbf{3DMV} (RGB-D) \cite{dai20183dmv} jointly combines RGB color and geometric information to perform 3D semantic segmentation of RGB-D scans. \textbf{Pix3D} \cite{pix3d} study 3D shape modeling from a single image. \textbf{ScanComplete} \cite{dai2018scancomplete} is a data-driven approach which takes an incomplete 3D scan of a scene as input and predicts a complete 3D model, along with per-voxel semantic labels. \textbf{Fusion++} \cite{McCormac2018FusionVO} is an online object-level SLAM system which builds a persistent and accurate 3D graph map of arbitrary reconstructed objects. As an RGB-D camera browses a cluttered indoor scene, \textbf{Mask-RCNN} instance segmentations are used to initialise compact per-object Truncated Signed Distance Function (TSDF) reconstructions with object size dependent resolutions and a novel 3D foreground mask. \textbf{SegMap} \cite{dube2018segmap} is a map representation based on 3D segments allowing for robot localization, environment reconstruction, and semantics extraction. \textbf{3D-SIS} \cite{hou20193d} is a novel neural network architecture for 3D semantic instance segmentation in commodity RGB-D scans. \textbf{DA-RNN} \cite{xiang2017rnn} uses a new recurrent neural network architecture for semantic labeling on RGB-D videos. \textbf{DenseFusion} \cite{wang2019densefusion} is a generic framework for estimating 6D pose of a set of known objects from RGB-D images. To recognize based on event camera, \cite{stromatias2017event}\cite{maro2018event}\cite{afshar2018investigation}\cite{linares2019dynamic} are the best paper to be investigated.
+    \item \textbf{Recovery Scale}: \textbf{CNN-SLAM} (Monocular) \cite{tateno2017cnn} estimates the depth with deep learning. Another work can be seen in \textbf{DeepVO} \cite{mohanty2016deepvo}. \textbf{UnDeepVO} \cite{li2018undeepvo} can get the 6-DoF pose and the depth using a monocular camera with deep learning. Google proposes the work \cite{li2019learning} that present a method for predicting dense depth in scenarios where both a monocular camera and people in the scene are freely moving based on unsupervised learning. Other methods to get real scale in Monocular can be seen in \cite{8353862}\cite{Sucar2017Bayesian}. \textbf{GeoNet} \cite{yin2018geonet} is a jointly unsupervised learning framework for monocular depth, optical flow and ego-motion estimation from videos. \textbf{GEN-SLAM} \cite{chakravarty2019gen} outputs the dense map with the aid of conventional geometric SLAM and the topological constraint in monocular. \cite{Lasinger2019} proposes a training objective that is invariant to changes in depth range and scale. Based on event camera, depth estimation can be applied in monocular camera \cite{haessig2019spiking}\cite{gallego2018unifying} and stereo camera \cite{xie2017event}. 
+    \item \textbf{Pose Output \& Optimization}:  \cite{konda2015learning} is a stereo-VO under the synchronicity. \cite{costante2015exploring} utilizes a CNN to estimate motion from optical flow. \textbf{PoseNet} \cite{kendall2015posenet} can get the 6-DOF pose from a single RGB image without the help of optimization. \textbf{VInet} (Monocular) \cite{clark2017vinet} firstly estimates the motion in VIO, reducing the dependence of manual synchronization and calibration. \textbf{DeepVO} (Monocular) \cite{wang2017deepvo} presents a novel end-to-end framework for monocular VO by using deep Recurrent Convolutional Neural Networks (RCNNs). The similar work can be seen in \cite{zhou2017unsupervised} and \textbf{SFM-Net}\cite{vijayanarasimhan2017sfm}. \textbf{VSO} \cite{Lianos2018VSO} proposes a novel visual semantic odometry (VSO) framework to enable medium-term continuous tracking of points using semantics. \textbf{MID-Fusion} (RGBD, dense point cloud) \cite{xu2018mid} estimates the pose of each existing moving object using an object-oriented tracking method and associate segmented masks with existing models and incrementally fuse corresponding color, depth, semantic, and foreground object probabilities into each object model. Besides, \cite{gallego2015event}\cite{reverter2016neuromorphic} are using event camera to output the ego-motion.
+    \item \textbf{Long-term Localization}: \cite{Bowman2017Probabilistic} formulates an optimization problem over sensor states and semantic landmark positions that integrates metric information, semantic information, and data associations. \cite{merrill2018lightweight} proposes a novel unsupervised deep neural network architecture of a feature embedding for visual loop closure. \cite{Stenborg2018Long} shows the semantic information is more effective than the traditional feature descriptors. \textbf{X-View} \cite{gawel2018x} leverages semantic graph descriptor matching for global localization, enabling localization under drastically different view-points. \cite{doherty2019multimodal} proposes a solution that represents hypotheses as multiple modes of an equivalent non-Gaussian sensor model to determine object class labels and measurement-landmark correspondences. About the application based on event camera, \cite{censi2013low} are worthy to be read. 
+    \item \textbf{Dynamic SLAM}: \textbf{RDSLAM} \cite{tan2013robust}  is a novel real-time monocular SLAM system which can robustly work in dynamic environments based on a novel online keyframe representation and updating method. \textbf{DS-SLAM} \cite{yu2018ds} is a SLAM system with semantic information based on optimized ORB-SLAM. The semantic information can make SLAM system more robust in dynamic environment. \textbf{MaskFusion} (RGB-D, dense point cloud) is a real-time, object-aware, semantic and dynamic RGB-D SLAM system \cite{8613746} based on Mask R-CNN\cite{matterport_maskrcnn_2017}. The system can label the objects with semantic information even in continuously and independent motion. The related work can be seen in \textbf{Co-Fusion} (RGBD)\cite{runz2017co}.  \textbf{Detect-SLAM} \cite{Zhong2018Detect} integrates SLAM with a deep neural network based object detector to make the two functions mutually beneficial in an unknown and dynamic environment. \textbf{DynaSLAM} \cite{bescos2018dynaslam} is a SLAM system for monocular, stereo and RGB-D camera in dynamic environments with aid of static map. \textbf{StaticFusion} \cite{scona2018staticfusion} proposes a method for robust dense RGB-D SLAM in dynamic environments which detects moving objects and simultaneously reconstructs the background structure. The related work based on dynamic environment can be also seen in \textbf{RGB-D SLAM}\cite{dai2018rgb} and \cite{wang2019computationally}\cite{xiao2019dynamic}\cite{barsan2018robust}.
+\end{itemize}
+
+
+\subsection{Challenge and Future}
+\subsubsection{Robustness and Portability}
+Visual SLAM still face some important obstacles like the illumination condition, high dynamic environment, fast motion, vigorous rotation and low texture environment. Firstly, global shutter instead of rolling shutter is fundamental to achieve accurate camera pose estimation. Event camera such as dynamic vision sensors is capable of producing up to one million events per second which is enough for very fast motions in high speed and high dynamic range. Secondly, using semantic features like edge, plane, surface features, even reducing feature dependencies, such as tracking with join edges, direct tracking, or a combination of machine learning may become the better choice. Thirdly, based mathematical machinery for SfM/SLAM, the precise mathematical formulations to outperform implicitly learned navigation functions over data is preferred.
+
+The future of SLAM has can be expected that one is SLAM based on smart phones or embedded platforms such as UAV (unmanned aerial vehicle) and another is detailed 3D reconstruction, scene understanding with deep learning.  How to balance real-time and accuracy is the vital open question. The solutions pertaining to dynamic, unstructured, complex, uncertain and large-scale environments are yet to be explored \cite{sualeh2019simultaneous}.
+\subsubsection{Multiple Sensors Fusion}
+The actual robots and hardware devices usually do not carry only one kind of sensor, and often a fusion of multiple sensors. For example, the current research on VIO on mobile phones combines visual information and IMU information to realize the complementary advantages of the two sensors, which provides a very effective solution for the miniaturization and low cost of SLAM. \textbf{DeLS-3D} \cite{wang2018dels} design is a sensor fusion scheme which integrates camera videos, motion sensors (GPS/IMU), and a 3D semantic map in order to achieve robustness and efficiency of the system. There are sensors listed as follows but not limited to Lidar, Sonar, IMU, IR, camera, GPS, radar, etc. The choice of sensors is dependent on the environment and required type of map.
+
+\subsubsection{Semantics SLAM}
+In fact, humans recognize the movement of objects based on perception not the features in image.  Deep learning in SLAM can realize object recognition and segmentation, which help the SLAM system perceive the surrounding better. Semantics SLAM can also do a favor in global optimization, loop closure and relocalization. \cite{atanasov2018unifying}: Traditional approaches for simultaneous localization and mapping (SLAM) depend on geometric features such as points, lines (\textbf{PL-SLAM} \cite{gomez2019pl}), and planes to infer the environment structure. The aim of high-precision real-time positioning in large-scale scenarios could be achieved by semantics SLAM, which teaches robots perceive as humans. 
+\subsubsection{Software \& hardware}
+SLAM is not an algorithm but an integrated, complex technology \cite{riisgaard2005dummies}. It not only depend on software, but also hardware. The future SLAM system will focus in the deep combination of algorithm and sensors. Based on illustration above, the domain specific processors rather than general processor, integrated sensors module rather than separate sensor like just camera will show great potential. The above work make the developer focus on the algorithm and accelerate the release of real products.
+
+\section{Lidar and Visual SLAM System}
+\subsection{Multiple Sensors Calibration}
+
+\begin{itemize}
+    \item \textbf{Camera \& IMU}: \textbf{Kalibr} \cite{rehder2016extending} is a toolbox that solves the following calibration problems: Multiple camera calibration, Visual-inertial calibration (camera-IMU) and Rolling Shutter Camera calibration. \textbf{Vins-Fusion} \cite{qin2018online} has online spatial calibration  and online temporal calibration.  \textbf{MSCKF-VIO} \cite{sun2018robust} also has the calibration for camera and IMU. Besides, \textbf{IMU-TK} \cite{tpm_icra2014}\cite{pg_imeko2014} can calibrate internal parameter of IMU. Other work can be seen in \cite{li2014high}.
+    \item \textbf{Lidar \& IMU}: \textbf{Lidar-Align} is a simple method for finding the extrinsic calibration between a 3D Lidar and a 6-Dof pose sensor. Extrinsic calibration of Lidar can be seen in \cite{yin2018extrinsic}\cite{chen2018extrinsic}. The doctoral thesis \cite{levinson2011automatic} illustrate the work of Lidar calibration. 
+    \item \textbf{Camera \& Lidar}: \cite{levinson2013automatic} introduces a probabilistic monitoring algorithm and a continuous calibration optimizer that enable camera-laser calibration online, automatically. \textbf{Lidar-Camera} \cite{2017arXiv170509785D} proposes a novel pipeline and experimental setup to find accurate rigid-body transformation for extrinsically calibrating a LiDAR and a camera using 3D-3D point correspondences. \textbf{RegNet} \cite{schneider2017regnet} is the first deep convolutional neural network (CNN) to infer a 6 degrees of freedom (DOF) extrinsic calibration between multi-modal sensors, exemplified using a scanning LiDAR and a monocular camera. \textbf{CalibNet} \cite{iyer2018calibnet} is  a self-supervised deep network capable of automatically estimating the 6-DoF rigid body transformation between a 3D LiDAR and a 2D camera in real-time. The calibration tool from \textbf{Autoware} can calibrate the signal beam Lidar and camera. Other work can be seen as follows but not limited to \cite{mirzaei20123d}\cite{ishikawa2018lidar}.
+
+\end{itemize}
+\subsection{Lidar and Visual Fusion}
+
+\begin{itemize}
+    \item \textbf{Hardware layer}: \textbf{Pandora} from HESAI is a software and hardware solution integrating 40 beams Lidar, five color cameras and recognition algorithm. The integrated solution can comfort developer from temporal and spatial synchronization. Understanding the exist of \textbf{CONTOUR} and \textbf{STENCIL} from \textbf{KAARTA} will give you a brainstorming.
+    \item \textbf{Data layer}: Lidar has sparse, high precision depth data and camera has dense but low precision depth data, which will lead to image-based depth upsampling and image-based depth inpainting/completion. \cite{ferstl2013image} presents a novel method for the challenging problem of depth image upsampling. \cite{ku2018defense} relies only on basic image processing operations to perform depth completion of sparse Lidar depth data. With deep learning, \cite{mal2018sparse} proposes the use of a single deep regression network to learn directly from the RGB-D raw data, and explore the impact of number of depth samples. \cite{uhrig2017sparsity} considers CNN operating on sparse inputs with an application to depth completion from sparse laser scan data. \textbf{DFuseNet} \cite{shivakumar2019dfusenet} proposes a CNN that is designed to upsample a series of sparse range measurements based on the contextual cues gleaned from a high resolution intensity image. Other similar work can be seen as follows but not limited to \cite{chen2018estimating} \cite{eldesokey2018propagating}.
+    \item \textbf{Task layer}: \cite{aycard2011intersection} fuses stereo camera and Lidar to perceive. \cite{chavez2015multiple} fuses radar, Lidar, and camera to detect and classify moving objects. Other traditional work can be seen but not limited to \cite{cho2014multi} \cite{wang2011integrating}\cite{wan2018robust}. \cite{zhang2014real} can augment VO by depth information such as provided by RGB-D cameras, or from Lidars associated with cameras even if sparsely available. \textbf{V-Loam} \cite{zhang2015visual} presents a general framework for combining visual odometry and Lidar odometry. The online method starts with visual odometry and scan matching based Lidar odometry refines the motion estimation and point cloud registration simultaneously. \textbf{VI-SLAM} \cite{nava2018visual} is concerned with the development of a system that combines an accurate laser odometry estimator, with algorithms for place recognition using vision for achieving loop detection. \cite{xu2018slam} aims at the tracking part of SLAM using an RGB-D camera and 2d low-cost LIDAR to finish a robust indoor SLAM by a mode switch and data fusion. \textbf{VIL-SLAM} \cite{shao2019stereo} incorporates tightly-coupled stereo VIO with Lidar mapping and Lidar enhanced visual loop closure. \cite{andert2015lidar} combines monocular camera images with laser distance measurements to allow visual SLAM without errors from increasing scale uncertainty. In deep learning, many methods to detect and recognize fusing data from camera and Lidar such as \textbf{PointFusion} \cite{xu2018pointfusion}, \textbf{RoarNet} \cite{shin2018roarnet}, \textbf{AVOD} \cite{ku2018joint}, \textbf{MV3D} \cite{chen2017multi}, \textbf{FuseNet} \cite{hazirbas2016fusenet}. Other similar work can be seen in \cite{wang2018fusing}. Besides, \cite{liang2018deep} exploit both Lidar as well as cameras to perform very accurate localization with a  an end-to-end learnable architecture.
+
+\end{itemize}
+
+\subsection{Challenge and Future}
+
+\begin{itemize}
+    \item \textbf{Data Association}:  the future of SLAM must integrate multi-sensors. But different sensors have different data types, time stamps, and coordinate system expressions, needed to be processed uniformly. Besides, physical model establishment, state estimation and optimization between multi-sensors should be taken into consideration.
+    \item \textbf{Integrated Hardware}: at present, there is no suitable chip and integrated hardware to make technology of SLAM more easily to be a product. On the other hand,  if the accuracy of a sensor degrades due to malfunctioning, off-nominal conditions, or aging, the quality of the sensor measurements (e.g., noise, bias) does not match the noise model. The robustness and integration of hardware should be followed. Sensors in front-end should have the capability to process data and the evolution from hardware layer to algorithm layer, then to function layer to SDK should be innovated to application. 
+    \item \textbf{Crowdsourcing}: decentralized visual SLAM is a powerful tool for multi-robot applications in environments where absolute positioning systems are not available \cite{cieslewski2018data}. Co-optimization visual multi-robot SLAM need decentralized data and optimization, which is called crowdsourcing. The privacy in the process of decentralized data should come into attention. The technology of differential privacy  \cite{dwork2011differential}\cite{mcsherry2007mechanism}  maybe do a favor. 
+    \item \textbf{High Definition Map}: High Definition Map is vital for robots. But which type of map is the best for robots? Could dense map or sparse map navigate, positioning and path plan? A related open question for long-term mapping is how often to update the information contained in the map and how to decide when this information becomes outdated and can be discarded.
+    \item \textbf{Adaptability, Robustness, Scalability}:  as we know, no SLAM system now can cover all scenarios. Most of it requires extensive parameter tuning in order to work correctly for a given scenario. To make robots perceive as humans, appearance-based instead of feature-based method is preferred, which will help close loops integrated with semantic information between day and night sequences or between different seasons. 
+    \item \textbf{Ability against risk and constraints}: Perfect SLAM system should be failure-safe and failure-aware. It's not the question about relocalization or loop closure here. SLAM system must have ability to response to risk or failure. In the same time, an ideal SLAM solution should be able run on different platforms no matter the computational constraints of platforms. How to balance the accuracy, robustness and the limited resource is a challenging problem \cite{delmerico2018benchmark}. 
+    \item \textbf{Application}: the technology of SLAM has a wide application such as: large-scale positioning, navigation and 3D or semantic map construction, environment recognition and understanding,  ground robotics, UAV, VR/AR/MR, AGV(Automatic Guided Vehicle), automatic drive, virtual interior decorator, virtual fitting room, immersive online game, earthquake relief, video segmentation and editing.
+    \item \textbf{Open question}: Will end-to-end learning dominate SLAM?
+\end{itemize}
+
+
+% Can use something like this to put references on a page
+% by themselves when using endfloat and the captionsoff option.
+\ifCLASSOPTIONcaptionsoff
+  \newpage
+\fi
+
+\bibliography{paper}
+
+\end{document}
+
+
