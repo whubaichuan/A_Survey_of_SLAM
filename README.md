@@ -11,7 +11,7 @@ Simultaneous Localization and Mapping (SLAM) achieves the purpose of simultaneou
 [v3](),01 Jan 2020
 
 ## 3.Frame
-The Frame in Visio and in Xmind are supplied. You can use it as a reference quickly and easily.
+The Frame in Visio (Mostly in Chinese) and in Xmind (Chinese) are supplied. You can use it as a reference quickly and easily.
 
 ## 4.Cite
 ```
